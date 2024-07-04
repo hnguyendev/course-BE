@@ -241,7 +241,10 @@ export const updateUserInfo = CatchAsyncError(
 
         await existingUser?.save();
 
-        redis.set(existingUser._id as RedisKey, JSON.stringify(existingUser));
+        await redis.set(
+          existingUser._id as RedisKey,
+          JSON.stringify(existingUser)
+        );
 
         return res.status(200).json({
           success: true,
@@ -290,7 +293,10 @@ export const updateUserPassword = CatchAsyncError(
         existingUser.password = newPassword;
         await existingUser.save();
 
-        redis.set(existingUser._id as RedisKey, JSON.stringify(existingUser));
+        await redis.set(
+          existingUser._id as RedisKey,
+          JSON.stringify(existingUser)
+        );
 
         return res.status(200).json({
           success: true,

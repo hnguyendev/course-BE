@@ -21,7 +21,7 @@ interface ILink extends Document {
 
 interface ICourseData extends Document {
   title: string;
-  desciption: string;
+  description: string;
   videoUrl: string;
   videoSection: string;
   videoLength: number;
@@ -73,7 +73,7 @@ const commentSchema: Schema<IComment> = new mongoose.Schema({
 
 const courseDataSchema: Schema<ICourseData> = new mongoose.Schema({
   title: String,
-  desciption: String,
+  description: String,
   videoUrl: String,
   videoSection: String,
   videoLength: Number,
