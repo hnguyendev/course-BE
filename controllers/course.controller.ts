@@ -324,6 +324,11 @@ export const addReview = CatchAsyncError(
       const userCourseList = req.user?.courses;
 
       const courseId = req.params.id;
+      const course = await courseModel.findById(courseId);
+
+      if (!course) {
+        return next(new ErrorHandler("Course not found!", 400));
+      }
 
       const existingCourse = userCourseList?.find(
         (course: any) => course._id.toString() === courseId
@@ -331,12 +336,6 @@ export const addReview = CatchAsyncError(
 
       if (!existingCourse) {
         return next(new ErrorHandler("Not allowed to access this course", 400));
-      }
-
-      const course = await courseModel.findById(courseId);
-
-      if (!course) {
-        return next(new ErrorHandler("Course not found!", 400));
       }
 
       const newReview: any = {
@@ -357,6 +356,56 @@ export const addReview = CatchAsyncError(
         title: "New Review Received",
         message: `${req.user?.name} has given a review in ${course.name}`,
       };
+
+      return res.status(201).json({
+        success: true,
+        course,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// add review replies
+interface IAddReviewReply {
+  comment: string;
+  courseId: string;
+  reviewId: string;
+}
+
+export const addReviewReply = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { comment, courseId, reviewId } = req.body as IAddReviewReply;
+
+      const course = await courseModel.findById(courseId);
+      if (!course) {
+        return next(new ErrorHandler("Course not found!", 400));
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+        return next(new ErrorHandler("Invalid review id!", 400));
+      }
+
+      const review = course.reviews.find((rev: any) =>
+        rev._id.equals(reviewId)
+      );
+
+      if (!review) {
+        return next(new ErrorHandler("Review not found!", 400));
+      }
+
+      const newReviewReply: any = {
+        user: req.user,
+        comment,
+      };
+      if (!review.commentReplies) {
+        review.commentReplies = [];
+      }
+      review.commentReplies?.push(newReviewReply);
+
+      await course.save();
 
       return res.status(201).json({
         success: true,
