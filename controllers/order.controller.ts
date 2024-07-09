@@ -79,9 +79,9 @@ export const createOrder = CatchAsyncError(
         message: `You have a new order from ${course.name}`,
       });
 
-      if (course.purchased) {
-        course.purchased += 1;
-      }
+      typeof course.purchased === "number"
+        ? (course.purchased += 1)
+        : course.purchased;
 
       await course.save();
 
