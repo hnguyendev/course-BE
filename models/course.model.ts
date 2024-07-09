@@ -49,7 +49,7 @@ interface ICourse extends Document {
   purchased?: number;
 }
 
-const reviewSchema: Schema<IReview> = new mongoose.Schema({
+const reviewSchema = new mongoose.Schema<IReview>({
   user: Object,
   rating: {
     type: Number,
@@ -61,18 +61,18 @@ const reviewSchema: Schema<IReview> = new mongoose.Schema({
   commentReplies: [Object],
 });
 
-const linkSchema: Schema<ILink> = new mongoose.Schema({
+const linkSchema = new mongoose.Schema<ILink>({
   title: String,
   url: String,
 });
 
-const commentSchema: Schema<IComment> = new mongoose.Schema({
+const commentSchema = new mongoose.Schema<IComment>({
   user: Object,
   question: String,
   questionReplies: [Object],
 });
 
-const courseDataSchema: Schema<ICourseData> = new mongoose.Schema({
+const courseDataSchema = new mongoose.Schema<ICourseData>({
   title: String,
   description: String,
   videoUrl: String,

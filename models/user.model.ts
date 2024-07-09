@@ -21,7 +21,7 @@ export interface IUser extends Document {
   signRefreshToken: () => string;
 }
 
-const userSchema: Schema<IUser> = new mongoose.Schema(
+const userSchema = new mongoose.Schema<IUser>(
   {
     name: {
       type: String,

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>
+      <div>
+        <h1>Your course order is confirmed!</h1>
+      </div>
+      <br />
+      <br />
+      <div>
+        <h4>Here's what you ordered!</h4>
+        <p>Order #: <%= order._id %></p>
+        <p>Order Date: <%= order.date %></p>
+        <p>Name: <%= order.name %></p>
+        <p>Quantity: 1</p>
+        <p>Cost: <%= order.price %></p>
+        <p>Total: <%= order.price %></p>
+      </div>
+      <div>
+        <p>
+          If you have any questions, please contact our support team at
+          <a href="mailto:xdd@gmail.com">xdd@gmail.com</a>
+        </p>
+        <p>&copy; 2024 XDD Online Course. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
