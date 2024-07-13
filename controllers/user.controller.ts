@@ -15,7 +15,7 @@ import {
 import { redis } from "../utils/redis";
 import cloudinary from "cloudinary";
 import { RedisKey } from "ioredis";
-import { getUserById } from "../services/user.service";
+import { getAllUsersService, getUserById } from "../services/user.service";
 
 interface IRegistrationBody {
   name: string;
@@ -430,6 +430,17 @@ export const updateAccessToken = CatchAsyncError(
         success: true,
         accessToken,
       });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// get all users --admin
+export const getAllUsers = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      getAllUsersService(res);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
