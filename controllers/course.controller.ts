@@ -99,7 +99,8 @@ export const getSingleCourse = CatchAsyncError(
 
         console.log("from db");
 
-        await redis.set(courseId, JSON.stringify(course));
+        // cache expires after 7days
+        await redis.set(courseId, JSON.stringify(course), "EX", 604800);
 
         return res.status(200).json({
           success: true,
