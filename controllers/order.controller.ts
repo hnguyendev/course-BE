@@ -10,11 +10,27 @@ import path from "path";
 import { sendMail } from "../utils/sendMail";
 import notificationModel from "../models/notification.model";
 import userModel from "../models/user.model";
+import { redis } from "../utils/redis";
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 export const createOrder = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { courseId, payment_info } = req.body as IOrder;
+
+      if (payment_info) {
+        if ("id" in payment_info) {
+          const paymentIntentId = payment_info.id;
+          const paymentIntent = await stripe.paymentIntents.retrieve(
+            paymentIntentId
+          );
+
+          if (paymentIntent.status !== "succeeded") {
+            return next(new ErrorHandler("Payment not authorized!", 400));
+          }
+        }
+      }
 
       const user = await userModel.findById(req.user?._id);
 
@@ -71,6 +87,8 @@ export const createOrder = CatchAsyncError(
       const newCourse = course?._id as any;
 
       user?.courses.push(newCourse);
+
+      await redis.set(user?._id as string, JSON.stringify(user));
       await user.save();
 
       await notificationModel.create({
@@ -103,6 +121,44 @@ export const getAllOrders = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       getAllOrdersService(res);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// send Stripe publishable key
+export const sendStripePublishableKey = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json({
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// new payment
+export const newPayment = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const newPayment = await stripe.paymentIntents.create({
+        amount: req.body.amount,
+        currency: "USD",
+        metadata: {
+          company: "XDD",
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+
+      res.status(201).json({
+        success: true,
+        client_secret: newPayment.client_secret,
+      });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
