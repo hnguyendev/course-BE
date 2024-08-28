@@ -3,6 +3,7 @@ import { Response } from "express";
 import { IUser } from "../models/user.model";
 import { redis } from "./redis";
 import { RedisKey } from "ioredis";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 interface ITokenOptions {
   expires: Date;
@@ -43,6 +44,9 @@ export const sendToken = (user: IUser, statusCode: number, res: Response) => {
   // upload session to redis
   redis.set(user._id as RedisKey, JSON.stringify(user));
 
+  // blacklist expire token
+  redis.set(`rt-${user._id}`, refreshToken, "EX", 3 * 24 * 3600);
+
   if (process.env.NODE_ENV === "production") {
     accessTokenOptions.secure = true;
   }
@@ -55,4 +59,21 @@ export const sendToken = (user: IUser, statusCode: number, res: Response) => {
     user,
     accessToken,
   });
+};
+
+export const verifyRefreshToken = async (token: string) => {
+  const decoded = jwt.verify(
+    token,
+    process.env.REFRESH_TOKEN || ""
+  ) as JwtPayload;
+  if (!decoded) {
+    throw new Error("Refresh token expired");
+  }
+
+  const session = await redis.get(`rt-${decoded.id}`);
+  if (session !== token) {
+    throw new Error("Refresh token expired");
+  }
+
+  return decoded;
 };

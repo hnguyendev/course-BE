@@ -11,6 +11,7 @@ import {
   accessTokenOptions,
   refreshTokenOptions,
   sendToken,
+  verifyRefreshToken,
 } from "../utils/jwt";
 import { redis } from "../utils/redis";
 import cloudinary from "cloudinary";
@@ -164,6 +165,7 @@ export const logoutUser = CatchAsyncError(
       res.cookie("refresh_token", "", { maxAge: 1 });
       const userId = (req.user?._id as string) || "";
       redis.del(userId);
+      redis.del(`rt-${userId}`);
 
       return res.status(200).json({
         success: true,
@@ -395,10 +397,7 @@ export const updateAccessToken = CatchAsyncError(
         return next(new ErrorHandler("Could not refresh token", 400));
       }
 
-      const decoded = jwt.verify(
-        refresh_token,
-        process.env.REFRESH_TOKEN as string
-      ) as JwtPayload;
+      const decoded = await verifyRefreshToken(refresh_token);
       if (!decoded) {
         return next(new ErrorHandler("Could not refresh token", 400));
       }
@@ -423,8 +422,6 @@ export const updateAccessToken = CatchAsyncError(
         }
       );
 
-      // redis.set(user._id as RedisKey, JSON.stringify(user));
-
       req.user = user;
 
       res.cookie("access_token", accessToken, accessTokenOptions);
@@ -432,6 +429,9 @@ export const updateAccessToken = CatchAsyncError(
 
       // cached expires after 7days
       await redis.set(user._id, JSON.stringify(user), "EX", 604800);
+
+      // blacklist expire token
+      redis.set(`rt-${user._id}`, refreshToken, "EX", 3 * 24 * 3600);
 
       return res.status(200).json({
         success: true,
